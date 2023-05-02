@@ -1,6 +1,19 @@
 const blindBackrunJSON = require('./utils/BlindBackrun.json')
 const ethers = require('ethers')
 
+async function estimateGasCost(transaction) {
+    const gasEstimate = await this.signer.provider.estimateGas(transaction);
+    const gasPriceEstimate = await this.signer.provider.getGasPrice();
+
+    // Increase the gas limit by 10% to provide some tolerance.
+    const gasLimit = gasEstimate.add(gasEstimate.div(10));
+
+    // Increase the gas price by 20% to increase the chances of faster confirmation.
+    const gasPrice = gasPriceEstimate.add(gasPriceEstimate.div(5));
+
+    return { gasPrice, gasLimit };
+}
+
 class BundleExecutor {
     constructor(_signer, _flashbotsBundleProvider, _contractAddress, _bundleAPI, _percentageToKeep) {
         this.signer = _signer
@@ -100,17 +113,19 @@ class BundleExecutor {
         console.log("Building bundles")
 
         let bundleTransactionOptions = {
-            gasPrice: (await this.signer.provider.getGasPrice()), // This is *extremely* naive. 
-            gasLimit: ethers.BigNumber.from(400000),
             nonce: await this.signer.getTransactionCount(),
-        } 
+        };
 
         let bundleOneTransaction = await this.contract.populateTransaction.executeArbitrage(
             _firstPair,
             _secondPair,
             this.percentageToKeep,
             bundleTransactionOptions
-        )
+        );
+
+        const { gasPrice, gasLimit } = await estimateGasCost(bundleOneTransaction);
+        bundleTransactionOptions.gasPrice = gasPrice;
+        bundleTransactionOptions.gasLimit = gasLimit;
 
         let bundleOne = [
             {hash: _txHash},
