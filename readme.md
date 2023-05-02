@@ -1,7 +1,7 @@
 # simple-blind-arbitrage
 This repository contains a simple, mechanical system for blindly submitting atomic arbitrage opportunities to the Flashbots MEV-Share mathcmaker. For more details on MEV-Share please see this [beta launch announcement](https://collective.flashbots.net/t/announcing-mev-share-beta/1650) and the [docs](https://docs.flashbots.net/flashbots-mev-share/overview). For high level design details see [the design document on the Flashbots Forum](https://collective.flashbots.net/t/mev-share-programmably-private-orderflow-to-share-mev-with-users/1264).
 
-Although user trade details are hidden by default to prevent frontrunning, this script can atomically backrun Uniswap v2 transactions form the Matchmaker **by calculating the optimal arbitrage between two Uniswap v2 pools entirely on-chain**. Off-chain logic is relatively simple and no trade details are needed beyond the pool that the user is trading on to discover and attempt to execute atomic arbitrage opportunities.
+Although user trade details are hidden by default to prevent frontrunning, this script can atomically backrun Uniswap v2 transactions from the Matchmaker **by calculating the optimal arbitrage between two Uniswap v2 pools entirely on-chain**. Off-chain logic is relatively simple and no trade details are needed beyond the pool that the user is trading on to discover and attempt to execute atomic arbitrage opportunities.
 
 Contained in this repository are two things. First, a [smart contract](/src/blindBackrun.sol) that attempts to execute an atomic arbitrage between two Uniswap v2 pools. Second, a [script](/execute/index.js) that listens to the Flashbots MEV-Share Matchmaker and submits attempted arbitrages.
 
