@@ -114,14 +114,14 @@ class BundleExecutor {
 
         let bundleTransactionOptions = {
             nonce: await this.signer.getTransactionCount(),
-        };
+        }
 
         let bundleOneTransaction = await this.contract.populateTransaction.executeArbitrage(
             _firstPair,
             _secondPair,
             this.percentageToKeep,
             bundleTransactionOptions
-        );
+        )
 
         const { gasPrice, gasLimit } = await estimateGasCost(bundleOneTransaction);
         bundleTransactionOptions.gasPrice = gasPrice;
