@@ -30,7 +30,6 @@ interface IPairReserves{
 contract BlindBackrun is Ownable {
     using SafeMath for uint256;
     uint256 uniswappyFee = 997;
-    uint256 uniswappyFeeSquared = uniswappyFeeSquared;
     
     address public immutable WETH_ADDRESS;
 
@@ -206,47 +205,6 @@ contract BlindBackrun is Ownable {
                 );
             return denominator;
         }
-    }
-
-    function getFlippedFakePairData(bool first) external view returns (IPairReserves.PairReserves memory){
-        uint256 reserve0; 
-        uint256 reserve1;
-        if (first){
-            reserve1 = 17221979511711;
-            reserve0 = 9022829950419911882261;
-        } else {
-            reserve1 = 24221870080988;
-            reserve0 = 29260889455340067009671;
-        }
-
-        uint256 price;
-
-        bool isWETHZero = true;
-
-        price = reserve0.mul(1e18).div(reserve1);
-
-        return IPairReserves.PairReserves(reserve0, reserve1, price, isWETHZero);
-    }
-
-
-    function getFakePairData(bool first) external view returns (IPairReserves.PairReserves memory){
-        uint256 reserve0; 
-        uint256 reserve1;
-        if (first){
-            reserve0 = 17221979511711000000000;
-            reserve1 = 9022829950419911882261;
-        } else {
-            reserve0 = 24221870080988000000000;
-            reserve1 = 29260889455340067009671;
-        }
-
-        uint256 price;
-
-        bool isWETHZero = false;
-
-        price = reserve0.mul(1e18).div(reserve1);
-
-        return IPairReserves.PairReserves(reserve0, reserve1, price, isWETHZero);
     }
 
     /// @notice Retrieves price and reserve data for a given Uniswap V2 pair. Also checks which token is WETH.

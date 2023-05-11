@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "../src/TokenForTesting.sol";
-import "../src/blindBackrunDebug.sol";
+import "../src/blindBackrun.sol";
 import "openzeppelin/token/ERC20/IERC20.sol";
 import "openzeppelin/token/ERC20/ERC20.sol";
 
@@ -62,15 +62,15 @@ contract BlindBackrunTest is Test {
     }
 
     function test_arbitrageCalculation() public {
-        IPairReserves.PairReserves memory firstPairData = blindBackrun.getFakePairData(true);
-        IPairReserves.PairReserves memory secondPairData = blindBackrun.getFakePairData(false);
+        IPairReserves.PairReserves memory firstPairData = getFakePairData(true);
+        IPairReserves.PairReserves memory secondPairData = getFakePairData(false);
         uint amountIn2 = blindBackrun.getAmountIn(firstPairData, secondPairData);
         console.log("amountIn:", amountIn2);
     }
 
     function test_arbitrageCalculationFlipped() public {
-        IPairReserves.PairReserves memory firstPairData = blindBackrun.getFlippedFakePairData(true);
-        IPairReserves.PairReserves memory secondPairData = blindBackrun.getFlippedFakePairData(false);
+        IPairReserves.PairReserves memory firstPairData = getFlippedFakePairData(true);
+        IPairReserves.PairReserves memory secondPairData = getFlippedFakePairData(false);
         uint amountIn2 = blindBackrun.getAmountIn(firstPairData, secondPairData);
         console.log("amountIn:", amountIn2);
     }
@@ -90,7 +90,7 @@ contract BlindBackrunTest is Test {
        
         address firstPair = uniswapFactory.getPair(usdcTokenAddress, wethTokenAddress);
         address secondPair = sushiswapFactory.getPair(usdcTokenAddress, wethTokenAddress);
-        
+
         blindBackrun.executeArbitrage(secondPair, firstPair, 80);
     }
 
@@ -98,5 +98,46 @@ contract BlindBackrunTest is Test {
         vm.expectRevert('Ownable: caller is not the owner');
         vm.prank(address(0));
         blindBackrun.withdrawWETHToOwner();
+    }
+
+    function getFlippedFakePairData(bool first) internal view returns (IPairReserves.PairReserves memory){
+        uint256 reserve0; 
+        uint256 reserve1;
+        if (first){
+            reserve1 = 17221979511711;
+            reserve0 = 9022829950419911882261;
+        } else {
+            reserve1 = 24221870080988;
+            reserve0 = 29260889455340067009671;
+        }
+
+        uint256 price;
+
+        bool isWETHZero = true;
+
+        price = reserve0.mul(1e18).div(reserve1);
+
+        return IPairReserves.PairReserves(reserve0, reserve1, price, isWETHZero);
+    }
+
+
+    function getFakePairData(bool first) internal view returns (IPairReserves.PairReserves memory){
+        uint256 reserve0; 
+        uint256 reserve1;
+        if (first){
+            reserve0 = 17221979511711000000000;
+            reserve1 = 9022829950419911882261;
+        } else {
+            reserve0 = 24221870080988000000000;
+            reserve1 = 29260889455340067009671;
+        }
+
+        uint256 price;
+
+        bool isWETHZero = false;
+
+        price = reserve0.mul(1e18).div(reserve1);
+
+        return IPairReserves.PairReserves(reserve0, reserve1, price, isWETHZero);
     }
 }
