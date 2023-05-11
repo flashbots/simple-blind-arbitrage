@@ -18,15 +18,18 @@ interface IUniswapV2Pair {
     function token1() external view returns (address);
 }
 
-contract BlindBackrun is Ownable {
-    using SafeMath for uint256;
-
-    struct PairReserves {
+interface IPairReserves{
+     struct PairReserves {
         uint256 reserve0;
         uint256 reserve1;
         uint256 price;
         bool isWETHZero;
     }
+}
+
+contract BlindBackrun is Ownable {
+    using SafeMath for uint256;
+    uint256 uniswappyFee = 997;
     
     address public immutable WETH_ADDRESS;
 
@@ -49,14 +52,19 @@ contract BlindBackrun is Ownable {
         IUniswapV2Pair firstPair = IUniswapV2Pair(firstPairAddress);
         IUniswapV2Pair secondPair = IUniswapV2Pair(secondPairAddress);
 
-        PairReserves memory firstPairData = getPairData(firstPair);
-        PairReserves memory secondPairData = getPairData(secondPair);
+        console.log("\n--------- PAIR DATA ---------");
+
+        IPairReserves.PairReserves memory firstPairData = getPairData(firstPair);
+        IPairReserves.PairReserves memory secondPairData = getPairData(secondPair);
 
         console.log("\n--------- PRICES ---------");
         console.log("firstPair price   : %s", firstPairData.price);
         console.log("secondPair price  : %s", secondPairData.price);
 
         uint256 amountIn = getAmountIn(firstPairData, secondPairData);
+            console.log("\n--------- TRADE AMOUNTS ---------");
+            console.log("amountIn          : %s", amountIn);
+
         IERC20(WETH_ADDRESS).transfer(firstPairAddress, amountIn);
         
         uint256 firstPairAmountOut;
@@ -65,8 +73,6 @@ contract BlindBackrun is Ownable {
             firstPairAmountOut = getAmountOut(amountIn, firstPairData.reserve0, firstPairData.reserve1);
             finalAmountOut = getAmountOut(firstPairAmountOut, secondPairData.reserve1, secondPairData.reserve0);
 
-            console.log("\n--------- TRADE AMOUNTS ---------");
-            console.log("amountIn          : %s", amountIn);
             console.log("firstPairAmountOut: %s", firstPairAmountOut);
             console.log("finalAmountOut    : %s", finalAmountOut);
             console.log("arb profit        : %s", (finalAmountOut.sub(amountIn)));
@@ -110,21 +116,106 @@ contract BlindBackrun is Ownable {
     /// @param firstPairData Struct containing data about the first Uniswap V2 pair.
     /// @param secondPairData Struct containing data about the second Uniswap V2 pair.
     /// @return amountIn, the optimal amount to trade to arbitrage two v2 pairs.
-    function getAmountIn(PairReserves memory firstPairData, PairReserves memory secondPairData) internal pure returns (uint256) {
-        uint256 uniswappyFee = 997;
-        uint256 numerator = sqrt(uniswappyFee.mul(uniswappyFee).mul(firstPairData.price).mul(secondPairData.price)).sub(1e18);
-        uint256 denominatorPart1 = (uniswappyFee.mul(1e18)).div(firstPairData.reserve1);
-        uint256 denominatorPart2 = (uniswappyFee.mul(uniswappyFee).mul(firstPairData.price)).div(secondPairData.reserve1);
-        uint256 denominator = denominatorPart1.add(denominatorPart2);
-        uint256 amountIn = numerator.div(denominator);
+    function getAmountIn(
+        IPairReserves.PairReserves memory firstPairData, 
+        IPairReserves.PairReserves memory secondPairData
+    ) public returns (uint256) {
+        uint256 numerator = getNumerator(firstPairData, secondPairData);
+        uint256 denominator = getDenominator(firstPairData, secondPairData);
+        
+        uint256 amountIn = 
+            numerator
+            .mul(1000)
+            .div(denominator);
+
         return amountIn;
+    }
+
+    function getNumerator(
+        IPairReserves.PairReserves memory firstPairData, 
+        IPairReserves.PairReserves memory secondPairData
+    ) public view returns (uint256) {
+        if (firstPairData.isWETHZero == true) {
+            uint presqrt = 
+                uniswappyFee
+                    .mul(uniswappyFee)
+                    .mul(firstPairData.reserve1)
+                    .mul(secondPairData.reserve0)
+                    .div(secondPairData.reserve1)
+                    .div(firstPairData.reserve0);
+            
+            uint256 numerator = 
+            (
+                sqrt(presqrt)
+                .sub(1e3)
+            )            
+            .mul(secondPairData.reserve1)
+            .mul(firstPairData.reserve0);
+
+            return numerator;
+        } else {
+            uint presqrt = 
+                uniswappyFee
+                    .mul(uniswappyFee)
+                    .mul(firstPairData.reserve0)
+                    .mul(secondPairData.reserve1)
+                    .div(secondPairData.reserve0)
+                    .div(firstPairData.reserve1);
+            
+            uint256 numerator = 
+            (
+                sqrt(presqrt)
+                .sub(1e3)
+            )            
+            .mul(secondPairData.reserve0)
+            .mul(firstPairData.reserve1);
+
+            return numerator;
+        }
+    }
+
+    function getDenominator(
+            IPairReserves.PairReserves memory firstPairData, 
+            IPairReserves.PairReserves memory secondPairData
+        ) public returns (uint256){
+        if (firstPairData.isWETHZero == true) {
+            uint256 denominator = 
+                (
+                    uniswappyFee
+                    .mul(secondPairData.reserve1)
+                    .mul(1000)
+                )
+                .add(
+                    uniswappyFee
+                    .mul(uniswappyFee)
+                    .mul(firstPairData.reserve1)
+                );
+            return denominator;
+        } else {
+            uint256 denominator = 
+                (
+                    uniswappyFee
+                    .mul(secondPairData.reserve0)
+                    .mul(1000)
+                )
+                .add(
+                    uniswappyFee
+                    .mul(uniswappyFee)
+                    .mul(firstPairData.reserve0)
+                );
+            return denominator;
+        }
     }
 
     /// @notice Retrieves price and reserve data for a given Uniswap V2 pair. Also checks which token is WETH.
     /// @param pair The Uniswap V2 pair to retrieve data for.
-    /// @return A PairReserves struct containing price and reserve data for the given pair.
-    function getPairData(IUniswapV2Pair pair) private view returns (PairReserves memory) {
+    /// @return A IPairReserves.PairReserves struct containing price and reserve data for the given pair.
+    function getPairData(IUniswapV2Pair pair) private view returns (IPairReserves.PairReserves memory) {
         (uint256 reserve0, uint256 reserve1, ) = pair.getReserves();
+        console.log("pair:", address(pair));
+        console.log("reserve0:",reserve0);
+        console.log("reserve1:", reserve1);
+
         uint256 price;
 
         bool isWETHZero = false;
@@ -135,7 +226,7 @@ contract BlindBackrun is Ownable {
             price = reserve0.mul(1e18).div(reserve1);
         }
 
-        return PairReserves(reserve0, reserve1, price, isWETHZero);
+        return IPairReserves.PairReserves(reserve0, reserve1, price, isWETHZero);
     }
 
     /// @notice Calculates the square root of a given number.
