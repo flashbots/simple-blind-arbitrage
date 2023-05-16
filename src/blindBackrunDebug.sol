@@ -107,6 +107,7 @@ contract BlindBackrun is Ownable {
         console.log("\n--------- SUCCESS ---------");
         console.log("Ending balance    : %s", balanceAfter);
         uint profit = balanceAfter.sub(balanceBefore);
+        console.log("Profit            : %s", profit);
         uint profitToCoinbase = profit.mul(percentageToPayToCoinbase).div(100);
         IWETH(WETH_ADDRESS).withdraw(profitToCoinbase);
         block.coinbase.transfer(profitToCoinbase);
@@ -119,10 +120,11 @@ contract BlindBackrun is Ownable {
     function getAmountIn(
         IPairReserves.PairReserves memory firstPairData, 
         IPairReserves.PairReserves memory secondPairData
-    ) public returns (uint256) {
+    ) public view returns (uint256) {
         uint256 numerator = getNumerator(firstPairData, secondPairData);
+        console.log("numerator: %s", numerator);
         uint256 denominator = getDenominator(firstPairData, secondPairData);
-        
+        console.log("denominator: %s", denominator);
         uint256 amountIn = 
             numerator
             .mul(1000)
@@ -143,7 +145,8 @@ contract BlindBackrun is Ownable {
                     .mul(secondPairData.reserve0)
                     .div(secondPairData.reserve1)
                     .div(firstPairData.reserve0);
-            
+            console.log("presqrt: %s", presqrt);
+            console.log("sqrt(presqrt): %s", sqrt(presqrt));
             uint256 numerator = 
             (
                 sqrt(presqrt)
@@ -177,7 +180,7 @@ contract BlindBackrun is Ownable {
     function getDenominator(
             IPairReserves.PairReserves memory firstPairData, 
             IPairReserves.PairReserves memory secondPairData
-        ) public returns (uint256){
+        ) public view returns (uint256){
         if (firstPairData.isWETHZero == true) {
             uint256 denominator = 
                 (
