@@ -46,7 +46,7 @@ contract BlindBackrun is Ownable {
         address firstPairAddress,
         address secondPairAddress,
         uint percentageToPayToCoinbase
-    ) external onlyOwner {
+    ) public {
         uint256 balanceBefore = IERC20(WETH_ADDRESS).balanceOf(address(this));
         console.log("Starting balance  : %s", balanceBefore);
         IUniswapV2Pair firstPair = IUniswapV2Pair(firstPairAddress);
