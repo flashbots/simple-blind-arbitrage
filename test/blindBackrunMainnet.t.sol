@@ -2,7 +2,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "../src/TokenForTesting.sol";
-import "../src/blindBackrunDebug.sol";
+// import "../src/blindBackrunDebug.sol";
+import "../src/blindBackrunFL.sol";
 import "openzeppelin/token/ERC20/IERC20.sol";
 import "openzeppelin/token/ERC20/ERC20.sol";
 
@@ -228,6 +229,39 @@ contract BlindBackrunTest is Test {
 
         // blindBackrun.executeArbitrage(firstPair, secondPair, 80);
         blindBackrun.executeArbitrage(secondPair, firstPair, 80);
+    }
+
+    function test_mainnetArbLargeWithFlashloan() public {
+        BlindBackrunFL blindBackrunFL = new BlindBackrunFL(wethTokenAddress);
+
+        address[] memory path = new address[](2);
+        path[0] = wethTokenAddress;
+        path[1] = usdcTokenAddress; //usdc 
+
+        // make a swap to imbalance the pools
+        uniswapv2Router.swapExactETHForTokens{value: 1e20}(
+            0, 
+            path, 
+            address(this), 
+            block.timestamp + 15
+        );
+       
+        address firstPair = uniswapFactory.getPair(usdcTokenAddress, wethTokenAddress);
+        address secondPair = sushiswapFactory.getPair(usdcTokenAddress, wethTokenAddress);
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 1e21;
+        IERC20[] memory tokens = new IERC20[](1);
+        tokens[0] = IERC20(wethTokenAddress);
+
+        bytes memory userData = abi.encode(firstPair, secondPair, 80);
+        blindBackrunFL.makeFlashLoan(
+            tokens,
+            amounts,
+            userData
+        );
+
+        // blindBackrun.executeArbitrage(secondPair, firstPair, 80);
     }
 
     function test_RevertWhen_CallerIsNotOwner() public {

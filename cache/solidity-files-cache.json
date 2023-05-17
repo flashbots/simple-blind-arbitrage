@@ -1071,6 +1071,45 @@
         }
       }
     },
+    "src/ArbitrageLibrary.sol": {
+      "lastModificationDate": 1684284317678,
+      "contentHash": "d41d8cd98f00b204e9800998ecf8427e",
+      "sourceName": "src/ArbitrageLibrary.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [],
+      "versionRequirement": null,
+      "artifacts": {
+        "ArbitrageLibrary": {
+          "0.8.15+commit.e14f2714.Darwin.appleclang": "ArbitrageLibrary.sol/ArbitrageLibrary.json"
+        }
+      }
+    },
     "src/Counter.sol": {
       "lastModificationDate": 1682782524475,
       "contentHash": "ae6c800a2b4c57768024d6e9423d39e8",
@@ -1111,8 +1150,8 @@
       }
     },
     "src/TokenForTesting.sol": {
-      "lastModificationDate": 1683020870807,
-      "contentHash": "d58de49679d4ca48411959caf2cacb75",
+      "lastModificationDate": 1684281016014,
+      "contentHash": "15d0ee73f24425ebb4aa6306e7dd1511",
       "sourceName": "src/TokenForTesting.sol",
       "solcConfig": {
         "settings": {
@@ -1155,8 +1194,8 @@
       }
     },
     "src/blindBackrun.sol": {
-      "lastModificationDate": 1683028345181,
-      "contentHash": "93e333d3dd2f192b8af772ca94ef71ad",
+      "lastModificationDate": 1683849372618,
+      "contentHash": "074a1ca4338378a5b12b8548d5b46ecf",
       "sourceName": "src/blindBackrun.sol",
       "solcConfig": {
         "settings": {
@@ -1196,6 +1235,9 @@
         "BlindBackrun": {
           "0.8.15+commit.e14f2714.Darwin.appleclang": "blindBackrun.sol/BlindBackrun.json"
         },
+        "IPairReserves": {
+          "0.8.15+commit.e14f2714.Darwin.appleclang": "blindBackrun.sol/IPairReserves.json"
+        },
         "IUniswapV2Pair": {
           "0.8.15+commit.e14f2714.Darwin.appleclang": "blindBackrun.sol/IUniswapV2Pair.json"
         },
@@ -1205,8 +1247,8 @@
       }
     },
     "src/blindBackrunDebug.sol": {
-      "lastModificationDate": 1683027325013,
-      "contentHash": "c21393b62d9c2f57a0e7df2eff1f758b",
+      "lastModificationDate": 1684284756174,
+      "contentHash": "9fb51856fed615420b2bd1ea400e2fe5",
       "sourceName": "src/blindBackrunDebug.sol",
       "solcConfig": {
         "settings": {
@@ -1247,6 +1289,9 @@
         "BlindBackrun": {
           "0.8.15+commit.e14f2714.Darwin.appleclang": "blindBackrunDebug.sol/BlindBackrun.json"
         },
+        "IPairReserves": {
+          "0.8.15+commit.e14f2714.Darwin.appleclang": "blindBackrunDebug.sol/IPairReserves.json"
+        },
         "IUniswapV2Pair": {
           "0.8.15+commit.e14f2714.Darwin.appleclang": "blindBackrunDebug.sol/IUniswapV2Pair.json"
         },
@@ -1255,10 +1300,62 @@
         }
       }
     },
-    "test/blindBackrun.t.sol": {
-      "lastModificationDate": 1683027342933,
-      "contentHash": "742e72a4a63048a4f6f805b5154f5e92",
-      "sourceName": "test/blindBackrun.t.sol",
+    "src/blindBackrunFL.sol": {
+      "lastModificationDate": 1684284962145,
+      "contentHash": "7029933c5f47815cb46e0156caf59c3c",
+      "sourceName": "src/blindBackrunFL.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
+        "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol",
+        "lib/openzeppelin-contracts/contracts/utils/Context.sol",
+        "lib/openzeppelin-contracts/contracts/utils/math/SafeMath.sol",
+        "lib/openzeppelin-contracts/lib/forge-std/src/console.sol",
+        "src/blindBackrunDebug.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "BlindBackrunFL": {
+          "0.8.15+commit.e14f2714.Darwin.appleclang": "blindBackrunFL.sol/BlindBackrunFL.json"
+        },
+        "IFlashLoanRecipient": {
+          "0.8.15+commit.e14f2714.Darwin.appleclang": "blindBackrunFL.sol/IFlashLoanRecipient.json"
+        },
+        "IVault": {
+          "0.8.15+commit.e14f2714.Darwin.appleclang": "blindBackrunFL.sol/IVault.json"
+        }
+      }
+    },
+    "test/blindBackrunMainnet.t.sol": {
+      "lastModificationDate": 1684283619452,
+      "contentHash": "7293f96f555a94025aa0375f00164025",
+      "sourceName": "test/blindBackrunMainnet.t.sol",
       "solcConfig": {
         "settings": {
           "optimizer": {
@@ -1311,18 +1408,19 @@
         "lib/openzeppelin-contracts/lib/forge-std/src/console2.sol",
         "lib/openzeppelin-contracts/lib/forge-std/src/interfaces/IMulticall3.sol",
         "src/TokenForTesting.sol",
-        "src/blindBackrunDebug.sol"
+        "src/blindBackrunDebug.sol",
+        "src/blindBackrunFL.sol"
       ],
       "versionRequirement": "^0.8.0",
       "artifacts": {
         "BlindBackrunTest": {
-          "0.8.15+commit.e14f2714.Darwin.appleclang": "blindBackrun.t.sol/BlindBackrunTest.json"
+          "0.8.15+commit.e14f2714.Darwin.appleclang": "blindBackrunMainnet.t.sol/BlindBackrunTest.json"
         },
         "IUniswapFactory": {
-          "0.8.15+commit.e14f2714.Darwin.appleclang": "blindBackrun.t.sol/IUniswapFactory.json"
+          "0.8.15+commit.e14f2714.Darwin.appleclang": "blindBackrunMainnet.t.sol/IUniswapFactory.json"
         },
         "IUniswapV2Router": {
-          "0.8.15+commit.e14f2714.Darwin.appleclang": "blindBackrun.t.sol/IUniswapV2Router.json"
+          "0.8.15+commit.e14f2714.Darwin.appleclang": "blindBackrunMainnet.t.sol/IUniswapV2Router.json"
         }
       }
     }
