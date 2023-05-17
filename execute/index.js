@@ -34,7 +34,7 @@ async function main() {
 
     if (argv.network == 'mainnet') {
         MatchMaker = new EventSource(config.mainnetMatchMaker)
-        bundleExecutor = new BundleExecutor(signer, flashbotsBundleProvider, process.env.executorContractAddress, config.mainnetMatchMaker, config.percentageToKeep)
+        bundleExecutor = new BundleExecutor(signer, flashbotsBundleProvider, process.env.executorContractAddress, config.mainnetBundleAPI, config.percentageToKeep)
     } else if (argv.network == 'goerli') {
         MatchMaker = new EventSource(config.goerliMatchMaker)
         bundleExecutor = new BundleExecutor(signer, flashbotsBundleProvider, process.env.executorContractAddress, config.goerliBundleAPI, config.percentageToKeep)
