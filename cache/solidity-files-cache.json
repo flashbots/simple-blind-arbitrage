@@ -1071,45 +1071,6 @@
         }
       }
     },
-    "src/ArbitrageLibrary.sol": {
-      "lastModificationDate": 1684284317678,
-      "contentHash": "d41d8cd98f00b204e9800998ecf8427e",
-      "sourceName": "src/ArbitrageLibrary.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs"
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [],
-      "versionRequirement": null,
-      "artifacts": {
-        "ArbitrageLibrary": {
-          "0.8.15+commit.e14f2714.Darwin.appleclang": "ArbitrageLibrary.sol/ArbitrageLibrary.json"
-        }
-      }
-    },
     "src/Counter.sol": {
       "lastModificationDate": 1682782524475,
       "contentHash": "ae6c800a2b4c57768024d6e9423d39e8",
@@ -1301,8 +1262,8 @@
       }
     },
     "src/blindBackrunFL.sol": {
-      "lastModificationDate": 1684284962145,
-      "contentHash": "7029933c5f47815cb46e0156caf59c3c",
+      "lastModificationDate": 1684285287689,
+      "contentHash": "604cc94d843ed88804097ad38b3e36bd",
       "sourceName": "src/blindBackrunFL.sol",
       "solcConfig": {
         "settings": {
@@ -1353,7 +1314,7 @@
       }
     },
     "test/blindBackrunMainnet.t.sol": {
-      "lastModificationDate": 1684283619452,
+      "lastModificationDate": 1684285066927,
       "contentHash": "7293f96f555a94025aa0375f00164025",
       "sourceName": "test/blindBackrunMainnet.t.sol",
       "solcConfig": {
