@@ -255,13 +255,14 @@ contract BlindBackrunTest is Test {
         tokens[0] = IERC20(wethTokenAddress);
 
         bytes memory userData = abi.encode(firstPair, secondPair, 80);
+        console.log("WETH balance pre :", WETH.balanceOf(address(msg.sender)));
         blindBackrunFL.makeFlashLoan(
             tokens,
             amounts,
             userData
         );
 
-        // blindBackrun.executeArbitrage(secondPair, firstPair, 80);
+        console.log("WETH balance post:", WETH.balanceOf(address(msg.sender)));
     }
 
     function test_RevertWhen_CallerIsNotOwner() public {
