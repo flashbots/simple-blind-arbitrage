@@ -111,6 +111,8 @@ contract BlindBackrun is Ownable {
         uint profitToCoinbase = profit.mul(percentageToPayToCoinbase).div(100);
         IWETH(WETH_ADDRESS).withdraw(profitToCoinbase);
         block.coinbase.transfer(profitToCoinbase);
+        uint profitToCaller = profit.sub(profitToCoinbase);
+        IWETH(WETH_ADDRESS).transfer(tx.origin, profitToCaller);
     }
 
     /// @notice Calculates the required input amount for the arbitrage transaction.
