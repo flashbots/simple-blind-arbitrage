@@ -34,7 +34,8 @@ interface IFlashLoanRecipient {
 }
 
 contract BlindBackrunFL is BlindBackrun, IFlashLoanRecipient {
-    IVault private constant vault = IVault(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
+    IVault private constant vault =
+        IVault(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
 
     constructor(address _wethAddress) BlindBackrun(_wethAddress) {}
 
@@ -52,24 +53,27 @@ contract BlindBackrunFL is BlindBackrun, IFlashLoanRecipient {
         uint256[] memory feeAmounts,
         bytes memory userData
     ) external {
-        require(msg.sender == address(vault), "FlashLoanRecipient: caller is not the vault");
+        require(
+            msg.sender == address(vault),
+            "FlashLoanRecipient: caller is not the vault"
+        );
         console.log("receiveFlashLoan");
 
         (
             address firstPairAddress,
             address secondPairAddress,
             uint256 percentageToPayToCoinbase
-        ) 
-            = abi.decode(
-                userData, 
-            (
-                address,
-                address,
-                uint256
-            )
-        );
-        executeArbitrage(secondPairAddress, firstPairAddress, percentageToPayToCoinbase);
-        IWETH(WETH_ADDRESS).transfer(address(vault), amounts[0]+(feeAmounts[0]));
-    }
+        ) = abi.decode(userData, (address, address, uint256));
 
+        executeArbitrage(
+            secondPairAddress,
+            firstPairAddress,
+            percentageToPayToCoinbase
+        );
+
+        IWETH(WETH_ADDRESS).transfer(
+            address(vault),
+            amounts[0] + (feeAmounts[0])
+        );
+    }
 }
