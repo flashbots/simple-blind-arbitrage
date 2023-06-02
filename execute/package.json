@@ -14,6 +14,7 @@
     "ethers": "^5.7.2",
     "eventsource": "^2.0.2",
     "mathjs": "^11.8.0",
+    "web3-eth-abi": "^1.10.0",
     "yargs": "^17.7.2"
   }
 }
