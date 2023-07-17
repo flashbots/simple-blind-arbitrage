@@ -1,7 +1,7 @@
 {
     "syncTopic": "0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822",
-    "mainnetMatchMaker": "https://mev-share.flashbots.net",
-    "goerliMatchMaker": "https://mev-share-goerli.flashbots.net",
+    "mainnetMevShareNode": "https://mev-share.flashbots.net",
+    "goerliMevShareNode": "https://mev-share-goerli.flashbots.net",
     "mainnetBundleAPI": "https://relay.flashbots.net",
     "goerliBundleAPI": "https://relay-goerli.flashbots.net",
     "mainnetUniswapFactoryAddress": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f", 
