@@ -145,7 +145,7 @@ contract BlindBackrun is Ownable {
     function getDenominator(
             IPairReserves.PairReserves memory firstPairData, 
             IPairReserves.PairReserves memory secondPairData
-        ) public returns (uint256){
+        ) public view returns (uint256){
         if (firstPairData.isWETHZero == true) {
             uint256 denominator = 
                 (
