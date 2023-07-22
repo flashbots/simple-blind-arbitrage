@@ -87,7 +87,7 @@ contract BlindBackrun is Ownable {
     function getAmountIn(
         IPairReserves.PairReserves memory firstPairData, 
         IPairReserves.PairReserves memory secondPairData
-    ) public returns (uint256) {
+    ) public view returns (uint256) {
         uint256 numerator = getNumerator(firstPairData, secondPairData);
         uint256 denominator = getDenominator(firstPairData, secondPairData);
         
