@@ -18,30 +18,30 @@ class BundleExecutor {
     }
 
     /**
-     * Executes arbitrage by sending bundles to the MatchMaker for a given transaction hash.
+     * Executes arbitrage by sending bundles to the MEV-Share Node for a given transaction hash.
      * @param {string} _firstPair - The first pair's address.
      * @param {string} _secondPair - The second pair's address.
      * @param {string} _txHash - The transaction hash to execute the bundles on.
      */
     async execute(_firstPair, _secondPair, _txHash) {
-        console.log("Sending bundles to MatchMaker for tx:", _txHash)
+        console.log("Sending bundles to MEV-Share Node for tx:", _txHash)
         const [bundleOneWithParams, bundleTwoWithParams] = await this.buildBundles(_firstPair, _secondPair, _txHash)
-        await this.sendBundleToMatchMaker(bundleOneWithParams, bundleTwoWithParams)
+        await this.sendBundleToNode(bundleOneWithParams, bundleTwoWithParams)
     }
 
     /**
-     * Sends bundles to the MatchMaker.
+     * Sends bundles to the MEV-Share Node.
      * @param {Object} _bundleOneWithParams - The first bundle with parameters.
      * @param {Object} _bundleTwoWithParams - The second bundle with parameters.
      */
-    async sendBundleToMatchMaker(_bundleOneWithParams, _bundleTwoWithParams) {
+    async sendBundleToNode(_bundleOneWithParams, _bundleTwoWithParams) {
         await Promise.all([
             this.sendBundle(_bundleOneWithParams),
             this.sendBundle(_bundleTwoWithParams)
         ])
     }
     
-    // At the moment this function isn't used at all because the MatchMaker doesn't support simulation against searcher bundles yet.
+    // At the moment this function isn't used at all because the MEV-Share Node doesn't support simulation against searcher bundles yet.
     async simBundle(_bundle) {
         const request = JSON.stringify(this.prepareRelayRequest([_bundle], 'mev_simBundle'))
         const response = await this.request(request)

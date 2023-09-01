@@ -30,17 +30,17 @@ async function main() {
 
     console.log("Loaded wallet with address:", signer.address)
 
-    let MatchMaker, bundleExecutor;
+    let MevShareNode, bundleExecutor;
 
     if (argv.network == 'mainnet') {
-        MatchMaker = new EventSource(config.mainnetMatchMaker)
-        bundleExecutor = new BundleExecutor(signer, flashbotsBundleProvider, process.env.executorContractAddress, config.mainnetMatchMaker, config.percentageToKeep)
+        MevShareNode = new EventSource(config.mainnetMevShareNode)
+        bundleExecutor = new BundleExecutor(signer, flashbotsBundleProvider, process.env.executorContractAddress, config.mainnetBundleAPI, config.percentageToKeep)
     } else if (argv.network == 'goerli') {
-        MatchMaker = new EventSource(config.goerliMatchMaker)
+        MevShareNode = new EventSource(config.goerliMevShareNode)
         bundleExecutor = new BundleExecutor(signer, flashbotsBundleProvider, process.env.executorContractAddress, config.goerliBundleAPI, config.percentageToKeep)
     }
 
-    MatchMaker.onmessage = async (event) => {
+    MevShareNode.onmessage = async (event) => {
         // Handle the incoming event
         const data = JSON.parse(event.data)
         console.log("New transaction with hash:", data.hash)
@@ -66,7 +66,7 @@ async function main() {
         }
 
     };
-    MatchMaker.onerror = (error) => {
+    MevShareNode.onerror = (error) => {
         // Handle the error
         console.error(error);
     }
