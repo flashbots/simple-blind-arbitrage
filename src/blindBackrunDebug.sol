@@ -1,15 +1,9 @@
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.19;
 
-import "openzeppelin/token/ERC20/IERC20.sol";
 import "openzeppelin/access/Ownable.sol";
-import "openzeppelin/utils/math/SafeMath.sol";
 
 import "forge-std/console.sol";
-
-interface IWETH is IERC20 {
-    function deposit() external payable;
-    function withdraw(uint) external;
-}
+import "./IWETH.sol";
 
 interface IUniswapV2Pair {
     function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);
@@ -28,13 +22,12 @@ interface IPairReserves{
 }
 
 contract BlindBackrun is Ownable {
-    using SafeMath for uint256;
-    uint256 uniswappyFee = 997;
-    
-    address public immutable WETH_ADDRESS;
+    uint256 constant uniswappyFee = 997;
 
-    constructor(address _wethAddress) {
-        WETH_ADDRESS = _wethAddress;
+    IWETH public immutable WETH;
+
+    constructor(IWETH _wethAddress) {
+        WETH = _wethAddress;
     }
 
     /// @notice Executes an arbitrage transaction between two Uniswap V2 pairs.
@@ -47,7 +40,7 @@ contract BlindBackrun is Ownable {
         address secondPairAddress,
         uint percentageToPayToCoinbase
     ) public {
-        uint256 balanceBefore = IERC20(WETH_ADDRESS).balanceOf(address(this));
+        uint256 balanceBefore = WETH.balanceOf(address(this));
         console.log("Starting balance  : %s", balanceBefore);
         IUniswapV2Pair firstPair = IUniswapV2Pair(firstPairAddress);
         IUniswapV2Pair secondPair = IUniswapV2Pair(secondPairAddress);
@@ -65,7 +58,7 @@ contract BlindBackrun is Ownable {
             console.log("\n--------- TRADE AMOUNTS ---------");
             console.log("amountIn          : %s", amountIn);
 
-        IERC20(WETH_ADDRESS).transfer(firstPairAddress, amountIn);
+        WETH.transfer(firstPairAddress, amountIn);
         
         uint256 firstPairAmountOut;
         uint256 finalAmountOut;
@@ -75,7 +68,7 @@ contract BlindBackrun is Ownable {
 
             console.log("firstPairAmountOut: %s", firstPairAmountOut);
             console.log("finalAmountOut    : %s", finalAmountOut);
-            console.log("arb profit        : %s", (finalAmountOut.sub(amountIn)));
+            console.log("arb profit        : %s", finalAmountOut - amountIn);
             
             console.log("\n--------- TRADING ---------");
 
@@ -91,7 +84,7 @@ contract BlindBackrun is Ownable {
             console.log("amountIn          : %s", amountIn);
             console.log("firstPairAmountOut: %s", firstPairAmountOut);
             console.log("finalAmountOut    : %s", finalAmountOut);
-            console.log("arb profit        : %s", (finalAmountOut.sub(amountIn)));
+            console.log("arb profit        : %s", finalAmountOut - amountIn);
             
             console.log("\n--------- TRADING ---------");
 
@@ -102,17 +95,17 @@ contract BlindBackrun is Ownable {
             console.log("secondPair swap done");
         }
         
-        uint256 balanceAfter = IERC20(WETH_ADDRESS).balanceOf(address(this));
+        uint256 balanceAfter = WETH.balanceOf(address(this));
         require(balanceAfter > balanceBefore, "Arbitrage failed");
         console.log("\n--------- SUCCESS ---------");
         console.log("Ending balance    : %s", balanceAfter);
-        uint profit = balanceAfter.sub(balanceBefore);
+        uint profit = balanceAfter - balanceBefore;
         console.log("Profit            : %s", profit);
-        uint profitToCoinbase = profit.mul(percentageToPayToCoinbase).div(100);
-        IWETH(WETH_ADDRESS).withdraw(profitToCoinbase);
+        WETH.withdraw(profit);
+        uint profitToCoinbase = profit * percentageToPayToCoinbase / 100;
+        uint profitToCaller = profit - profitToCoinbase;
         block.coinbase.transfer(profitToCoinbase);
-        uint profitToCaller = profit.sub(profitToCoinbase);
-        IWETH(WETH_ADDRESS).transfer(tx.origin, profitToCaller);
+        payable(tx.origin).transfer(profitToCaller);
     }
 
     /// @notice Calculates the required input amount for the arbitrage transaction.
@@ -129,8 +122,8 @@ contract BlindBackrun is Ownable {
         console.log("denominator: %s", denominator);
         uint256 amountIn = 
             numerator
-            .mul(1000)
-            .div(denominator);
+            * 1000
+            / denominator;
 
         return amountIn;
     }
@@ -140,40 +133,39 @@ contract BlindBackrun is Ownable {
         IPairReserves.PairReserves memory secondPairData
     ) public view returns (uint256) {
         if (firstPairData.isWETHZero == true) {
-            uint presqrt = 
-                uniswappyFee
-                    .mul(uniswappyFee)
-                    .mul(firstPairData.reserve1)
-                    .mul(secondPairData.reserve0)
-                    .div(secondPairData.reserve1)
-                    .div(firstPairData.reserve0);
+            uint presqrt = uniswappyFee
+                    * uniswappyFee
+                    * firstPairData.reserve1
+                    * secondPairData.reserve0
+                    / secondPairData.reserve1
+                    / firstPairData.reserve0;
             console.log("presqrt: %s", presqrt);
             console.log("sqrt(presqrt): %s", sqrt(presqrt));
             uint256 numerator = 
             (
                 sqrt(presqrt)
-                .sub(1e3)
+                - 1e3
             )            
-            .mul(secondPairData.reserve1)
-            .mul(firstPairData.reserve0);
+            * secondPairData.reserve1
+            * firstPairData.reserve0;
 
             return numerator;
         } else {
-            uint presqrt = 
-                uniswappyFee
-                    .mul(uniswappyFee)
-                    .mul(firstPairData.reserve0)
-                    .mul(secondPairData.reserve1)
-                    .div(secondPairData.reserve0)
-                    .div(firstPairData.reserve1);
-            
+            uint presqrt = uniswappyFee
+                * uniswappyFee
+                * firstPairData.reserve0
+                * secondPairData.reserve1
+                / secondPairData.reserve0
+                / firstPairData.reserve1;
+
+
             uint256 numerator = 
             (
                 sqrt(presqrt)
-                .sub(1e3)
+                - 1e3
             )            
-            .mul(secondPairData.reserve0)
-            .mul(firstPairData.reserve1);
+            * secondPairData.reserve0
+            * firstPairData.reserve1;
 
             return numerator;
         }
@@ -182,31 +174,31 @@ contract BlindBackrun is Ownable {
     function getDenominator(
             IPairReserves.PairReserves memory firstPairData, 
             IPairReserves.PairReserves memory secondPairData
-        ) public view returns (uint256){
+        ) public pure returns (uint256){
         if (firstPairData.isWETHZero == true) {
             uint256 denominator = 
                 (
                     uniswappyFee
-                    .mul(secondPairData.reserve1)
-                    .mul(1000)
+                    * secondPairData.reserve1
+                    * 1000
                 )
-                .add(
+                + (
                     uniswappyFee
-                    .mul(uniswappyFee)
-                    .mul(firstPairData.reserve1)
+                    * uniswappyFee
+                    * firstPairData.reserve1
                 );
             return denominator;
         } else {
             uint256 denominator = 
                 (
                     uniswappyFee
-                    .mul(secondPairData.reserve0)
-                    .mul(1000)
+                    * secondPairData.reserve0
+                    * 1000
                 )
-                .add(
+                + (
                     uniswappyFee
-                    .mul(uniswappyFee)
-                    .mul(firstPairData.reserve0)
+                    * uniswappyFee
+                    * firstPairData.reserve0
                 );
             return denominator;
         }
@@ -224,11 +216,11 @@ contract BlindBackrun is Ownable {
         uint256 price;
 
         bool isWETHZero = false;
-        if (pair.token0() == WETH_ADDRESS) {
-            price = reserve1.mul(1e18).div(reserve0);
+        if (pair.token0() == address(WETH)) {
+            price = reserve1 * 1e18 / reserve0;
             isWETHZero = true;
         } else {
-            price = reserve0.mul(1e18).div(reserve1);
+            price = reserve0 * 1e18 / reserve1;
         }
 
         return IPairReserves.PairReserves(reserve0, reserve1, price, isWETHZero);
@@ -239,11 +231,11 @@ contract BlindBackrun is Ownable {
     /// @return y, The square root of the given number.
     function sqrt(uint256 x) private pure returns (uint256) {
         if (x == 0) return 0;
-        uint256 z = x.add(1).div(2);
+        uint256 z = (x + 1) / 2;
         uint256 y = x;
         while (z < y) {
             y = z;
-            z = ((x.div(z)).add(z)).div(2);
+            z = ((x / z) + z) / 2;
         }
         return y;
     }
@@ -257,28 +249,14 @@ contract BlindBackrun is Ownable {
         uint reserveIn,
         uint reserveOut
     ) internal pure returns (uint amountOut) {
-        uint amountInWithFee = amountIn.mul(997);
-        uint numerator = amountInWithFee.mul(reserveOut);
-        uint denominator = reserveIn.mul(1000).add(amountInWithFee);
+        uint amountInWithFee = amountIn * 997;
+        uint numerator = amountInWithFee * reserveOut;
+        uint denominator = reserveIn * 1000 + amountInWithFee;
         amountOut = numerator / denominator;
         return amountOut;
     }
 
-    /// @notice Transfers all WETH held by the contract to the contract owner.
-    /// @dev Only the contract owner can call this function.
-    function withdrawWETHToOwner() external onlyOwner {
-        uint256 balance = IERC20(WETH_ADDRESS).balanceOf(address(this));
-        IERC20(WETH_ADDRESS).transfer(msg.sender, balance);
-    }
-
-    /// @notice Transfers all ETH held by the contract to the contract owner.
-    /// @dev Only the contract owner can call this function.
-    function withdrawETHToOwner() external onlyOwner {
-        uint256 balance = address(this).balance;
-        payable(msg.sender).transfer(balance);
-    }
-
-    /// @notice Executes a call to another contract with the provided data and value.
+    /// @notice Executes a call to another contract with the provided data and value. The owner of this contract can help rescue assets accidentally left on contract, but in normal operation, this contract does not hold assets and is not centrally controlled.
     /// @dev Only the contract owner can call this function.
     /// @dev Reverted calls will result in a revert. 
     /// @param _to The address of the contract to call.

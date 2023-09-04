@@ -1,10 +1,9 @@
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.19;
 
 import "openzeppelin/token/ERC20/IERC20.sol";
-import "openzeppelin/access/Ownable.sol";
-import "openzeppelin/utils/math/SafeMath.sol";
 import "forge-std/console.sol";
 import "./BlindBackrunDebug.sol";
+import "./IWETH.sol";
 
 interface IVault {
     function flashLoan(
@@ -37,13 +36,13 @@ contract BlindBackrunFL is BlindBackrun, IFlashLoanRecipient {
     IVault private constant vault =
         IVault(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
 
-    constructor(address _wethAddress) BlindBackrun(_wethAddress) {}
+    constructor(IWETH _wethAddress) BlindBackrun(_wethAddress) {}
 
     function makeFlashLoan(
         IERC20[] memory tokens,
         uint256[] memory amounts,
         bytes memory userData
-    ) external onlyOwner {
+    ) external {
         vault.flashLoan(this, tokens, amounts, userData);
     }
 
@@ -53,6 +52,7 @@ contract BlindBackrunFL is BlindBackrun, IFlashLoanRecipient {
         uint256[] memory feeAmounts,
         bytes memory userData
     ) external {
+        tokens;feeAmounts; // suppress warnings about unused variables by referencing them
         require(
             msg.sender == address(vault),
             "FlashLoanRecipient: caller is not the vault"
@@ -71,9 +71,10 @@ contract BlindBackrunFL is BlindBackrun, IFlashLoanRecipient {
             percentageToPayToCoinbase
         );
 
-        IWETH(WETH_ADDRESS).transfer(
+        // This contract will not work if balancer implements a flash loan fee as we are not adding "feeAmounts[0]" below
+        WETH.transfer(
             address(vault),
-            amounts[0] + (feeAmounts[0])
+            amounts[0]
         );
     }
 }

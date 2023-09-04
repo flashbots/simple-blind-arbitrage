@@ -31,7 +31,6 @@ interface IUniswapV2Router {
 }
 
 contract BlindBackrunTest is Test {
-    using SafeMath for uint256;
     struct PairReserves {
         uint256 reserve0;
         uint256 reserve1;
@@ -56,9 +55,11 @@ contract BlindBackrunTest is Test {
     address usdtTokenAddress = address(0xdAC17F958D2ee523a2206206994597C13D831ec7);
 
     IWETH WETH = IWETH(wethTokenAddress);
-  
+
+    bytes constant withdrawNoWethCalldata =  hex"2e1a7d4d0000000000000000000000000000000000000000000000000000000000000000";
+
     function setUp() public {
-        blindBackrun = new BlindBackrun(wethTokenAddress); // WETH address on 
+        blindBackrun = new BlindBackrun(WETH); // WETH address on
         vm.deal(address(msg.sender), 1e25);
         WETH.deposit{value: 1e23}();
         WETH.transfer(address(blindBackrun), 1e23);
@@ -214,7 +215,7 @@ contract BlindBackrunTest is Test {
     function test_mainnetArbMedium() public {
         address[] memory path = new address[](2);
         path[0] = wethTokenAddress;
-        path[1] = usdtTokenAddress; //usdc 
+        path[1] = usdtTokenAddress;
 
         // make a swap to imbalance the pools
         uniswapv2Router.swapExactETHForTokens{value: 1e20}(
@@ -227,16 +228,15 @@ contract BlindBackrunTest is Test {
         address firstPair = uniswapFactory.getPair(usdtTokenAddress, wethTokenAddress);
         address secondPair = sushiswapFactory.getPair(usdtTokenAddress, wethTokenAddress);
 
-        // blindBackrun.executeArbitrage(firstPair, secondPair, 80);
         blindBackrun.executeArbitrage(secondPair, firstPair, 80);
     }
 
     function test_mainnetArbLargeWithFlashloan() public {
-        BlindBackrunFL blindBackrunFL = new BlindBackrunFL(wethTokenAddress);
+        BlindBackrunFL blindBackrunFL = new BlindBackrunFL(WETH);
 
         address[] memory path = new address[](2);
         path[0] = wethTokenAddress;
-        path[1] = usdcTokenAddress; //usdc 
+        path[1] = usdcTokenAddress;
 
         // make a swap to imbalance the pools
         uniswapv2Router.swapExactETHForTokens{value: 1e20}(
@@ -268,7 +268,11 @@ contract BlindBackrunTest is Test {
     function test_RevertWhen_CallerIsNotOwner() public {
         vm.expectRevert('Ownable: caller is not the owner');
         vm.prank(address(0));
-        blindBackrun.withdrawWETHToOwner();
+        blindBackrun.call(payable(wethTokenAddress), 0, withdrawNoWethCalldata);
+    }
+
+    function test_CallerIsOwner() public {
+        blindBackrun.call(payable(wethTokenAddress), 0, withdrawNoWethCalldata);
     }
 
     function getFlippedFakePairData(bool first) internal pure returns (IPairReserves.PairReserves memory){
@@ -286,7 +290,7 @@ contract BlindBackrunTest is Test {
 
         bool isWETHZero = true;
 
-        price = reserve0.mul(1e18).div(reserve1);
+        price = reserve0 * 1e18 / reserve1;
 
         return IPairReserves.PairReserves(reserve0, reserve1, price, isWETHZero);
     }
@@ -307,7 +311,7 @@ contract BlindBackrunTest is Test {
 
         bool isWETHZero = false;
 
-        price = reserve0.mul(1e18).div(reserve1);
+        price = reserve0 * 1e18 / reserve1;
 
         return IPairReserves.PairReserves(reserve0, reserve1, price, isWETHZero);
     }
