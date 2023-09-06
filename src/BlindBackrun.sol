@@ -15,4 +15,18 @@ contract BlindBackrun is BlindBackrunLogic {
     ) external onlyOwner {
         _executeArbitrage(firstPairAddress, secondPairAddress, percentageToPayToCoinbase);
     }
+
+    /// @notice Transfers all WETH held by the contract to the contract owner.
+    /// @dev Only the contract owner can call this function.
+    function withdrawWETHToOwner() external onlyOwner {
+        uint256 balance = IERC20(WETH_ADDRESS).balanceOf(address(this));
+        IERC20(WETH_ADDRESS).transfer(msg.sender, balance);
+    }
+
+    /// @notice Transfers all ETH held by the contract to the contract owner.
+    /// @dev Only the contract owner can call this function.
+    function withdrawETHToOwner() external onlyOwner {
+        uint256 balance = address(this).balance;
+        payable(msg.sender).transfer(balance);
+    }
 }

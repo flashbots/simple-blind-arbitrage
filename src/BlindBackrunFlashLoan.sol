@@ -70,6 +70,8 @@ contract BlindBackrunFlashLoan is BlindBackrunLogic, IFlashLoanRecipient {
             uint256 percentageToPayToCoinbase
         ) = abi.decode(userData, (address, address, uint256));
 
+        // If Balancer implements a Flash Loan fee, we will need to pass it in here so that we leave some WETH after
+        // Paying out the executor and block coinbase.
         _executeArbitrage(
             secondPairAddress,
             firstPairAddress,
