@@ -2,7 +2,7 @@ pragma solidity ^0.8.19;
 
 import "openzeppelin/token/ERC20/IERC20.sol";
 import "forge-std/console.sol";
-import "./BlindBackrunDebug.sol";
+import "./BlindBackrunLogic.sol";
 import "./IWETH.sol";
 
 interface IVault {
@@ -19,8 +19,11 @@ interface IFlashLoanRecipient {
      * @dev When `flashLoan` is called on the Vault, it invokes the `receiveFlashLoan` hook on the recipient.
      *
      * At the time of the call, the Vault will have transferred `amounts` for `tokens` to the recipient. Before this
-     * call returns, the recipient must have transferred `amounts` plus `feeAmounts` for each token back to the
-     * Vault, or else the entire flash loan will revert.
+     * call returns, the recipient must have transferred `amounts` back or else the entire flash loan will revert. If
+     * Balancer implements a fee, this contract will need to be redeployed to include that fee when paying back loan
+     *
+     * While this contract is `Ownable`, the owner can only help recover locked assets. Many users can operate on this
+     * contract as it does not rely on owning WETH or accumulating any balances.
      *
      * `userData` is the same value passed in the `IVault.flashLoan` call.
      */
@@ -32,12 +35,14 @@ interface IFlashLoanRecipient {
     ) external;
 }
 
-contract BlindBackrunFL is BlindBackrun, IFlashLoanRecipient {
+contract BlindBackrunFlashLoan is BlindBackrunLogic, IFlashLoanRecipient {
     IVault private constant vault =
         IVault(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
 
-    constructor(IWETH _wethAddress) BlindBackrun(_wethAddress) {}
+    constructor(IWETH _wethAddress) BlindBackrunLogic(_wethAddress) {}
 
+    // This function is just a convenience function, you can accomplish the same goal by calling the vault.flashLoan
+    // directly as the top-level destination of your ethereum transaction
     function makeFlashLoan(
         IERC20[] memory tokens,
         uint256[] memory amounts,
@@ -65,7 +70,7 @@ contract BlindBackrunFL is BlindBackrun, IFlashLoanRecipient {
             uint256 percentageToPayToCoinbase
         ) = abi.decode(userData, (address, address, uint256));
 
-        executeArbitrage(
+        _executeArbitrage(
             secondPairAddress,
             firstPairAddress,
             percentageToPayToCoinbase

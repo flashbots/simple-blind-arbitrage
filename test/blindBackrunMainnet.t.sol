@@ -2,8 +2,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "../src/TokenForTesting.sol";
-// import "../src/blindBackrunDebug.sol";
-import "../src/blindBackrunFL.sol";
+import "../src/BlindBackrun.sol";
+import "../src/BlindBackrunFlashLoan.sol";
 import "openzeppelin/token/ERC20/IERC20.sol";
 import "openzeppelin/token/ERC20/ERC20.sol";
 
@@ -232,7 +232,7 @@ contract BlindBackrunTest is Test {
     }
 
     function test_mainnetArbLargeWithFlashloan() public {
-        BlindBackrunFL blindBackrunFL = new BlindBackrunFL(WETH);
+        BlindBackrunFlashLoan blindBackrunFlashLoan = new BlindBackrunFlashLoan(WETH);
 
         address[] memory path = new address[](2);
         path[0] = wethTokenAddress;
@@ -256,7 +256,7 @@ contract BlindBackrunTest is Test {
 
         bytes memory userData = abi.encode(firstPair, secondPair, 80);
         console.log("WETH balance pre :", WETH.balanceOf(address(msg.sender)));
-        blindBackrunFL.makeFlashLoan(
+        blindBackrunFlashLoan.makeFlashLoan(
             tokens,
             amounts,
             userData
