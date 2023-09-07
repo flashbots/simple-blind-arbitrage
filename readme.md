@@ -38,7 +38,7 @@ executorContractAddress=<CONTRACT_ADDRESS>
 ```
 Replace <YOUR_RPC_URL> with the URL of your Ethereum RPC provider, <YOUR_PRIVATE_KEY> with the private key of the Ethereum address you want to use for executing the transactions, and <CONTRACT_ADDRESS> with the address of the deployed BlindBackrun smart contract from above.
 
-By default this bot bids 50% of its profits to `block.coinbase` but this can be configured by changing `percentageToKeep` in the [config file](./execute/utils/config.json). After a short time after open sourcing it is likely that you will need to increase `percentageToKeep` for your bundles to be competitive.
+By default this bot bids 99% of its profits to `block.coinbase` but this can be configured by changing `percentageToKeep` in the [config file](./execute/utils/config.json). 
 
 ### Usage
 To start listening to the Flashbots MEV-Share Node and submitting blind arbitrage transactions, run the following command:
