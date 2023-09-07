@@ -3,7 +3,7 @@ This repository contains a simple, mechanical system for blindly submitting atom
 
 Although user trade details are hidden by default to prevent frontrunning, this script can atomically backrun Uniswap v2 transactions from the Node **by calculating the optimal arbitrage between two Uniswap v2 pools entirely on-chain**. Off-chain logic is relatively simple and no trade details are needed beyond the pool that the user is trading on to discover and attempt to execute atomic arbitrage opportunities.
 
-Contained in this repository are two things. First, a [smart contract](/src/blindBackrun.sol) that attempts to execute an atomic arbitrage between two Uniswap v2 pools. Second, a [script](/execute/index.js) that listens to the Flashbots MEV-Share Node and submits attempted arbitrages.
+Contained in this repository are two things. First, a [smart contract](/src/BlindBackrunLogic.sol) that attempts to execute an atomic arbitrage between two Uniswap v2 pools. Second, a [script](/execute/index.js) that listens to the Flashbots MEV-Share Node and submits attempted arbitrages.
 
 This script is intended to be used as an example of blind atomic MEV and how to integrate with the Flashbots MEV-Share Node. Please do your own research and understand the code before using it or putting your money in it. We hope that you will use this code to build your own MEV strategies and share them with the community.
 
@@ -27,7 +27,7 @@ npm install
 Note that this repo also uses [Foundry](https://github.com/foundry-rs/foundry).
 
 ### Setup
-1. Deploy the [smart contract](/src/blindBackrun.sol) using your preferred method. The dependencies may need to be changed if not using Foundry. Further, you must provide the WETH address on your deployment network as a constructor argument. Finally, please note the account that deploys the contract is the only one that can execute arbitrages.
+1. Deploy the [smart contract](/src/BlindBackrunLogic.sol) using your preferred method. The dependencies may need to be changed if not using Foundry. Further, you must provide the WETH address on your deployment network as a constructor argument. Finally, please note the account that deploys the contract is the only one that can execute arbitrages.
 2. Transfer WETH to your contract.
 3. Setup your .env file by copying the template and filling it out. 
 
