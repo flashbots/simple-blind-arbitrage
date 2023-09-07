@@ -1,5 +1,7 @@
 const blindBackrunJSON = require('./utils/BlindBackrun.json')
 const ethers = require('ethers')
+const Web3EthAbi = require('web3-eth-abi')
+const config = require('./utils/config.json')
 
 class BundleExecutor {
     constructor(_signer, _flashbotsBundleProvider, _contractAddress, _bundleAPI, _percentageToKeep) {
@@ -105,10 +107,24 @@ class BundleExecutor {
             nonce: await this.signer.getTransactionCount(),
         } 
 
-        let bundleOneTransaction = await this.contract.populateTransaction.executeArbitrage(
+        const types = [
+            'address',
+            'address',
+            'uint256'
+        ]
+        
+        const valuesFirstTrade = [
             _firstPair,
             _secondPair,
-            this.percentageToKeep,
+            this.percentageToKeep  
+        ]
+
+        let paramsFirstTrade = Web3EthAbi.encodeParameters(types, valuesFirstTrade)
+
+        let bundleOneTransaction = await this.contract.populateTransaction.makeFlashLoan(
+            config.mainnetWETHAddress,
+            ethers.BigNumber.from(10**21).toString(),
+            paramsFirstTrade,
             bundleTransactionOptions
         )
 
@@ -117,12 +133,20 @@ class BundleExecutor {
             {tx: await this.signer.signTransaction(bundleOneTransaction), canRevert: false},
         ]
 
-        let bundleTwoTransaction = await this.contract.populateTransaction.executeArbitrage(
+        const valuesSecondTrade = [
             _secondPair,
             _firstPair,
-            this.percentageToKeep,
+            this.percentageToKeep  
+        ]
+
+        let paramsSecondTrade = Web3EthAbi.encodeParameters(types, valuesSecondTrade)
+
+        let bundleTwoTransaction = await this.contract.populateTransaction.makeFlashLoan(
+            config.mainnetWETHAddress,
+            ethers.BigNumber.from(10**21).toString(),
+            paramsSecondTrade,
             bundleTransactionOptions
-        )
+        )       
 
         let bundleTwo = [
             {hash: _txHash},

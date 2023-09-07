@@ -2,7 +2,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import "../src/TokenForTesting.sol";
-import "../src/blindBackrunDebug.sol";
+import "../src/BlindBackrun.sol";
+import "../src/BlindBackrunFlashLoan.sol";
 import "openzeppelin/token/ERC20/IERC20.sol";
 import "openzeppelin/token/ERC20/ERC20.sol";
 
@@ -30,7 +31,6 @@ interface IUniswapV2Router {
 }
 
 contract BlindBackrunTest is Test {
-    using SafeMath for uint256;
     struct PairReserves {
         uint256 reserve0;
         uint256 reserve1;
@@ -55,9 +55,11 @@ contract BlindBackrunTest is Test {
     address usdtTokenAddress = address(0xdAC17F958D2ee523a2206206994597C13D831ec7);
 
     IWETH WETH = IWETH(wethTokenAddress);
-  
+
+    bytes constant withdrawNoWethCalldata =  hex"2e1a7d4d0000000000000000000000000000000000000000000000000000000000000000";
+
     function setUp() public {
-        blindBackrun = new BlindBackrun(wethTokenAddress); // WETH address on 
+        blindBackrun = new BlindBackrun(WETH); // WETH address on
         vm.deal(address(msg.sender), 1e25);
         WETH.deposit{value: 1e23}();
         WETH.transfer(address(blindBackrun), 1e23);
@@ -213,7 +215,7 @@ contract BlindBackrunTest is Test {
     function test_mainnetArbMedium() public {
         address[] memory path = new address[](2);
         path[0] = wethTokenAddress;
-        path[1] = usdtTokenAddress; //usdc 
+        path[1] = usdtTokenAddress;
 
         // make a swap to imbalance the pools
         uniswapv2Router.swapExactETHForTokens{value: 1e20}(
@@ -226,14 +228,51 @@ contract BlindBackrunTest is Test {
         address firstPair = uniswapFactory.getPair(usdtTokenAddress, wethTokenAddress);
         address secondPair = sushiswapFactory.getPair(usdtTokenAddress, wethTokenAddress);
 
-        // blindBackrun.executeArbitrage(firstPair, secondPair, 80);
         blindBackrun.executeArbitrage(secondPair, firstPair, 80);
+    }
+
+    function test_mainnetArbLargeWithFlashloan() public {
+        BlindBackrunFlashLoan blindBackrunFlashLoan = new BlindBackrunFlashLoan(WETH);
+
+        address[] memory path = new address[](2);
+        path[0] = wethTokenAddress;
+        path[1] = usdcTokenAddress;
+
+        // make a swap to imbalance the pools
+        uniswapv2Router.swapExactETHForTokens{value: 1e20}(
+            0, 
+            path, 
+            address(this), 
+            block.timestamp + 15
+        );
+       
+        address firstPair = uniswapFactory.getPair(usdcTokenAddress, wethTokenAddress);
+        address secondPair = sushiswapFactory.getPair(usdcTokenAddress, wethTokenAddress);
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 1e21;
+        IERC20[] memory tokens = new IERC20[](1);
+        tokens[0] = IERC20(wethTokenAddress);
+
+        bytes memory userData = abi.encode(firstPair, secondPair, 80);
+        console.log("WETH balance pre :", WETH.balanceOf(address(msg.sender)));
+        blindBackrunFlashLoan.makeFlashLoan(
+            tokens,
+            amounts,
+            userData
+        );
+
+        console.log("WETH balance post:", WETH.balanceOf(address(msg.sender)));
     }
 
     function test_RevertWhen_CallerIsNotOwner() public {
         vm.expectRevert('Ownable: caller is not the owner');
         vm.prank(address(0));
-        blindBackrun.withdrawWETHToOwner();
+        blindBackrun.call(payable(wethTokenAddress), 0, withdrawNoWethCalldata);
+    }
+
+    function test_CallerIsOwner() public {
+        blindBackrun.call(payable(wethTokenAddress), 0, withdrawNoWethCalldata);
     }
 
     function getFlippedFakePairData(bool first) internal pure returns (IPairReserves.PairReserves memory){
@@ -251,7 +290,7 @@ contract BlindBackrunTest is Test {
 
         bool isWETHZero = true;
 
-        price = reserve0.mul(1e18).div(reserve1);
+        price = reserve0 * 1e18 / reserve1;
 
         return IPairReserves.PairReserves(reserve0, reserve1, price, isWETHZero);
     }
@@ -272,7 +311,7 @@ contract BlindBackrunTest is Test {
 
         bool isWETHZero = false;
 
-        price = reserve0.mul(1e18).div(reserve1);
+        price = reserve0 * 1e18 / reserve1;
 
         return IPairReserves.PairReserves(reserve0, reserve1, price, isWETHZero);
     }
