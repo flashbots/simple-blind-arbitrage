@@ -11,7 +11,7 @@ This script is intended to be used as an example of blind atomic MEV and how to 
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/simple-blind-arbitrage.git
+git clone https://github.com/flashbots/simple-blind-arbitrage.git
 ```
 
 2. Change to the project directory:
